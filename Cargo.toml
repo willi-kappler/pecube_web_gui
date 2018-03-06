@@ -1,0 +1,11 @@
+[package]
+name = "pecube_web_gui"
+version = "0.1.0"
+authors = ["Willi Kappler <grandor@gmx.de>"]
+
+[dependencies]
+gotham = "0.2.0"
+gotham_derive = "0.2.0"
+hyper = "0.11"
+futures = "0.1"
+mime = "0.3"

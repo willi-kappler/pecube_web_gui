@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>Welcome to the Pecube web GUI</title>
+  </head>
+  <body>
+    <h1 style="text-align:center;">Welcome to the Pecube web GUI</h1>
+    <h2 style="text-align:center;">Please log in first:</h2>
+    <form action="/handle_login"  method="post">
+      <table style="margin: 0 auto; border: 1px solid black; padding: 5px; border-spacing: 5px;">
+        <tr>
+          <td>Login:</td>
+          <td><input name="login" type="text"></td>
+        </tr>
+        <tr>
+          <td>Password:</td>
+          <td><input name="password" type="password"></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align: center;"><input type="submit"></td>
+        </tr>
+      </table>
+    </form>
+  </body>
+</html>
