@@ -2,6 +2,8 @@
 // use std::io::Read;
 // use std::io;
 
+use std::collections::HashMap;
+
 use hyper::{StatusCode, Body};
 use mime;
 use futures::{Stream, Future, future};
@@ -9,8 +11,24 @@ use futures::{Stream, Future, future};
 use gotham::state::{State, FromState};
 use gotham::http::response::create_response;
 use gotham::handler::{HandlerFuture, IntoHandlerError};
+use gotham::middleware::session::{SessionData};
+
 
 use helper;
+
+fn check_login(post_parameters: &HashMap<String, String>) -> bool {
+    if post_parameters.contains_key("login") {
+        if post_parameters.contains_key("password") {
+            let login = &post_parameters["login"];
+            let password = &post_parameters["password"];
+
+            if login == "test1" && password == "1234567890" { return true }
+
+        }
+    }
+
+    false
+}
 
 pub fn handle_login(mut state: State) -> Box<HandlerFuture> {
     let handler_future = Body::take_from(&mut state)
@@ -26,7 +44,16 @@ pub fn handle_login(mut state: State) -> Box<HandlerFuture> {
 
                 println!("post_parameters: {:?}", post_parameters);
 
-                let page = "handle login".to_string();
+                let mut user_data = {
+                    let user_data = SessionData::<helper::UserData>::borrow_from(&state);
+                    user_data.clone();
+                };
+
+                let page = if check_login(&post_parameters) {
+                    "Login successful!".to_string()
+                } else {
+                    "wrong login information".to_string()
+                };
 
                 let res = create_response(
                     &state,

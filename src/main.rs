@@ -4,14 +4,20 @@ extern crate hyper;
 extern crate mime;
 extern crate serde;
 extern crate serde_json;
+extern crate chrono;
 
-// #[macro_use] extern crate gotham_derive;
-// #[macro_use] extern crate serde_derive;
+
+#[macro_use] extern crate gotham_derive;
+#[macro_use] extern crate serde_derive;
 #[macro_use] extern crate nom;
 
 
 use gotham::router::Router;
 use gotham::router::builder::*;
+use gotham::middleware::session::{NewSessionMiddleware};
+use gotham::pipeline::single::single_pipeline;
+use gotham::pipeline::new_pipeline;
+
 
 
 mod show_login;
@@ -21,7 +27,15 @@ mod helper;
 
 
 fn router() -> Router {
-    build_simple_router(|route| {
+
+    let middleware = NewSessionMiddleware::default()
+        .with_session_type::<helper::UserData>()
+        .insecure();
+
+
+    let (chain, pipelines) = single_pipeline(new_pipeline().add(middleware).build());
+
+    build_router(chain, pipelines, |route| {
         route.get("/").to(show_login::show_login);
         route.post("/handle_login").to(handle_login::handle_login);
     })

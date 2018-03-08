@@ -2,6 +2,18 @@ use std::collections::HashMap;
 
 use nom::{IResult, alphanumeric};
 
+
+#[derive(Clone, Deserialize, Serialize, StateData, Default, Debug)]
+pub struct UserData {
+    pub login_id: String,
+    pub logged_in: bool,
+    pub last_login: u32,
+}
+
+
+
+
+
 named!(parse_parameters<&str, Vec<(String, String)>>, do_parse!(
     first: complete!(ws!(parse_kv_tuple)) >>
     rest: many0!(ws!(parse_next_kv_tuple)) >>
