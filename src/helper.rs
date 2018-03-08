@@ -46,10 +46,10 @@ pub fn extract_post_params(message_body: &str) -> HashMap<String, String> {
                 post_parameters.insert(key, value);
             }
         },
-        IResult::Incomplete(i) => {
+        IResult::Incomplete(_i) => {
             // println!("extract_post_params: error incomplete: {:?}", i);
         },
-        IResult::Error(e) => {
+        IResult::Error(_e) => {
             // println!("extract_post_params: error: {}", e);
         }
     }
@@ -89,6 +89,16 @@ mod tests {
         let expected = IResult::Done("", vec![
             ("login".to_string(), "test1".to_string()),
             ("time".to_string(), "12345".to_string())
+        ]);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_parameters3() {
+        let result = parse_parameters(" login=test1&time=");
+        let expected = IResult::Done("&time=", vec![
+            ("login".to_string(), "test1".to_string())
         ]);
 
         assert_eq!(result, expected);

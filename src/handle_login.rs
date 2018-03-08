@@ -1,8 +1,8 @@
-use std::fs::File;
-use std::io::Read;
-use std::io;
+// use std::fs::File;
+// use std::io::Read;
+// use std::io;
 
-use hyper::{Response, StatusCode, Body};
+use hyper::{StatusCode, Body};
 use mime;
 use futures::{Stream, Future, future};
 
@@ -19,7 +19,7 @@ pub fn handle_login(mut state: State) -> Box<HandlerFuture> {
             Ok(valid_body) => {
                 let body_content = String::from_utf8(valid_body.to_vec()).unwrap();
 
-                println!("Body: {}", body_content);
+                // println!("Body: {}", body_content);
                 // Body: login=test&password=12345
 
                 let post_parameters = helper::extract_post_params(&body_content);
