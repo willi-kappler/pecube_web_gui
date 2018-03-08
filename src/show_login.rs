@@ -20,6 +20,8 @@ fn get_login_page(file_name: &str) -> Result<String, io::Error> {
 pub fn show_login(state: State) -> (State, Response) {
     let file_name = "html/show_login.html";
 
+    println!("show_login");
+
     let page = match get_login_page(file_name) {
             Ok(result) => result,
             Err(_) => format!("Could not load page '{}'", file_name)

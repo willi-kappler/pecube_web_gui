@@ -2,13 +2,23 @@ extern crate futures;
 extern crate gotham;
 extern crate hyper;
 extern crate mime;
+extern crate serde;
+extern crate serde_json;
+
+#[macro_use] extern crate gotham_derive;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate nom;
+
+
 
 use gotham::router::Router;
 use gotham::router::builder::*;
 
+
 mod show_login;
 mod handle_login;
 mod configuration;
+mod helper;
 
 
 fn router() -> Router {
