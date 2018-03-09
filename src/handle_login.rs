@@ -35,12 +35,7 @@ pub fn handle_login(mut state: State) -> Box<HandlerFuture> {
             Ok(valid_body) => {
                 let body_content = String::from_utf8(valid_body.to_vec()).unwrap();
 
-                // println!("Body: {}", body_content);
-                // Body: login=test&password=12345
-
                 let post_parameters = helper::extract_post_params(&body_content);
-
-                // println!("post_parameters: {:?}", post_parameters);
 
                 let mut user_data = helper::UserData::new();
 

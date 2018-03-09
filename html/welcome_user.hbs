@@ -1,9 +1,32 @@
 <html>
   <head>
     <title>Welcome to the Pecube web GUI</title>
+    <style>
+    .button {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+    }
+
+    .button1 {border-radius: 2px;}
+    .button2 {border-radius: 4px;}
+    .button3 {border-radius: 8px;}
+    .button4 {border-radius: 12px;}
+    .button5 {border-radius: 50%;}
+    </style>
   </head>
   <body>
     <h1 style="text-align:center;">Welcome to the Pecube web GUI</h1>
     <h2 style="text-align:center;">Login ID: '{{login_id}}'</h2>
+    <p><form action="/handle_logout" method="post">
+      <button class="button button4" name="login_id" value="{{login_id}}">LOGOUT</button>
+    </form></p>
   </body>
 </html>

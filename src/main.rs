@@ -23,6 +23,7 @@ use gotham::pipeline::new_pipeline;
 
 mod show_login;
 mod handle_login;
+mod handle_logout;
 mod configuration;
 mod helper;
 
@@ -39,6 +40,7 @@ fn router() -> Router {
     build_router(chain, pipelines, |route| {
         route.get("/").to(show_login::show_login);
         route.post("/handle_login").to(handle_login::handle_login);
+        route.post("/handle_logout").to(handle_logout::handle_logout);
     })
 }
 
@@ -46,6 +48,5 @@ pub fn main() {
     let addr = "0.0.0.0:3030";
     println!("Listening for requests at http://{}", addr);
 
-    // All incoming requests are delegated to the router for further analysis and dispatch
     gotham::start(addr, router())
 }
