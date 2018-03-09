@@ -5,6 +5,9 @@
   <body>
     <h1 style="text-align:center;">Welcome to the Pecube web GUI</h1>
     <h2 style="text-align:center;">Please log in first:</h2>
+    {{#if message}}
+      <h2 style="text-align:center;">{{message}}</h2>
+    {{/if}}
     <form action="/handle_login" method="post">
       <table style="margin: 0 auto; border: 1px solid black; padding: 5px; border-spacing: 5px;">
         <tr>

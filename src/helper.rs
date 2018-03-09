@@ -1,18 +1,119 @@
 use std::collections::HashMap;
+use std::fmt;
+use std::fs::File;
+use std::io::Read;
+use std::io;
+
+
 
 use nom::{IResult, alphanumeric};
+use handlebars::{Handlebars, RenderError};
+
+
+static SHOW_LOGIN_FILE : &str = "html/show_login.hbs";
+static WELCOME_USER_FILE : &str = "html/welcome_user.hbs";
 
 
 #[derive(Clone, Deserialize, Serialize, StateData, Default, Debug)]
 pub struct UserData {
     pub login_id: String,
     pub logged_in: bool,
-    pub last_login: u32,
+    pub last_login: i64,
 }
 
+impl UserData {
+    pub fn new() -> Self {
+        UserData{ login_id: "".to_string(), logged_in: false, last_login: 0 }
+    }
+}
+
+impl fmt::Display for UserData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}, {}, {}", self.login_id, self.logged_in, self.last_login)
+    }
+}
+
+fn load_page(file_name: &str) -> Result<String, io::Error> {
+    let mut file = File::open(file_name)?;
+    let mut result = String::new();
+
+    file.read_to_string(&mut result)?;
+
+    Ok(result)
+}
+
+fn could_not_load_page(file_name: &str) -> String {
+    format!("
+        <html>
+            <head>
+                <title>Pecube Web GUI</title>
+            </head>
+            <body>
+                <h1>Could not load page: '{}'</h1>
+            </body>
+        </html>", file_name)
+}
+
+fn handlears_render_error(error: RenderError) -> String {
+    format!("
+        <html>
+            <head>
+                <title>Pecube Web GUI</title>
+            </head>
+            <body>
+                <h1>Could not render page: '{}'</h1>
+            </body>
+        </html>", error)
+}
+
+pub fn get_login_page(message: &str) -> String {
+    let mut hb = Handlebars::new();
+
+    match hb.register_template_file("show_login", SHOW_LOGIN_FILE) {
+        Ok(_) => {
+            match hb.render("show_login", &json!({"message": message})) {
+                Ok(page) => page,
+                Err(e) => handlears_render_error(e)
+            }
+        }
+        Err(_) => {
+            could_not_load_page(SHOW_LOGIN_FILE)
+        }
+    }
+
+    // TODO: template engine, show message if not empty
+    /*
+    match load_page(SHOW_LOGIN_FILE) {
+        Ok(result) => result,
+        Err(_) => could_not_load_page(SHOW_LOGIN_FILE)
+    }
+    */
+}
+
+pub fn get_welcome_user_page(login_id: &str) -> String {
+    let mut hb = Handlebars::new();
+
+    match hb.register_template_file("welcome_user", WELCOME_USER_FILE) {
+        Ok(_) => {
+            match hb.render("welcome_user", &json!({"login_id": login_id})) {
+                Ok(page) => page,
+                Err(e) => handlears_render_error(e)
+            }
+        }
+        Err(_) => {
+            could_not_load_page(WELCOME_USER_FILE)
+        }
+    }
 
 
-
+    // TODO: template engine, show login id of the user
+    /*
+    match load_page(WELCOME_USER_FILE) {
+        Ok(result) => result,
+        Err(_) => could_not_load_page(WELCOME_USER_FILE)
+    }
+    */
+}
 
 named!(parse_parameters<&str, Vec<(String, String)>>, do_parse!(
     first: complete!(ws!(parse_kv_tuple)) >>

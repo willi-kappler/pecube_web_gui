@@ -1,7 +1,3 @@
-use std::fs::File;
-use std::io::Read;
-use std::io;
-
 use hyper::{Response, StatusCode};
 use mime;
 
@@ -11,15 +7,6 @@ use gotham::middleware::session::{SessionData};
 
 use helper;
 
-fn get_login_page(file_name: &str) -> Result<String, io::Error> {
-    let mut file = File::open(file_name)?;
-    let mut result = String::new();
-
-    file.read_to_string(&mut result)?;
-
-    Ok(result)
-}
-
 pub fn show_login(state: State) -> (State, Response) {
     println!("show_login");
 
@@ -28,19 +15,12 @@ pub fn show_login(state: State) -> (State, Response) {
         user_data.clone()
     };
 
-    println!("user_data: {:?}", user_data);
+    println!("show_login, user_data: {:?}", user_data);
 
     let page = if user_data.logged_in {
-        let file_name = "html/welcome_user.html";
-
-        format!("User {} already logged in", user_data.login_id)
+        helper::get_welcome_user_page(&user_data.login_id)
     } else {
-        let file_name = "html/show_login.html";
-
-        match get_login_page(file_name) {
-                Ok(result) => result,
-                Err(_) => format!("Could not load page '{}'", file_name)
-        }
+        helper::get_login_page("")
     };
 
     let res = create_response(
