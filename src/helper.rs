@@ -140,10 +140,10 @@ pub fn extract_post_params(message_body: &str) -> HashMap<String, String> {
             }
         },
         IResult::Incomplete(_i) => {
-            println!("extract_post_params: error incomplete: {:?}", i);
+            println!("extract_post_params: error incomplete: {:?}", _i);
         },
         IResult::Error(_e) => {
-            println!("extract_post_params: error: {}", e);
+            println!("extract_post_params: error: {}", _e);
         }
     }
 
