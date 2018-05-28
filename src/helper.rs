@@ -1,19 +1,17 @@
 use std::collections::HashMap;
 use std::fmt;
-use std::fs::File;
-use std::io::Read;
-use std::io;
 
 use nom::{IResult, alphanumeric};
 use handlebars::{Handlebars, RenderError};
 use serde_json;
 
-
-
-static SHOW_LOGIN_FILE : &str = "html/show_login.hbs";
-static WELCOME_USER_FILE : &str = "html/welcome_user.hbs";
-static LOGOUT_FILE : &str = "html/logout.hbs";
-
+use hyper::{StatusCode, Body};
+use mime;
+use futures::{Stream, Future, future};
+use gotham::state::{State, FromState};
+use gotham::http::response::create_response;
+use gotham::handler::{HandlerFuture, IntoHandlerError};
+use gotham::middleware::session::{SessionData};
 
 #[derive(Clone, Deserialize, Serialize, StateData, Default, Debug)]
 pub struct UserData {
@@ -32,15 +30,6 @@ impl fmt::Display for UserData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}, {}, {}", self.login_id, self.logged_in, self.last_login)
     }
-}
-
-fn load_page(file_name: &str) -> Result<String, io::Error> {
-    let mut file = File::open(file_name)?;
-    let mut result = String::new();
-
-    file.read_to_string(&mut result)?;
-
-    Ok(result)
 }
 
 fn could_not_load_page(file_name: &str) -> String {
@@ -84,15 +73,44 @@ fn load_hb_file(hb_name: &str, hb_file: &str, hb_json: &serde_json::Value) -> St
 }
 
 pub fn get_login_page(message: &str) -> String {
-    load_hb_file("show_login", SHOW_LOGIN_FILE, &json!({"message": message}))
+    load_hb_file("show_login", "html/show_login.hbs", &json!({"message": message}))
 }
 
 pub fn get_logout_page(user_id: &str) -> String {
-    load_hb_file("logout", LOGOUT_FILE, &json!({"login_id": user_id}))
+    load_hb_file("logout", "html/logout.hbs", &json!({"user_id": user_id}))
 }
 
 pub fn get_welcome_user_page(login_id: &str) -> String {
-    load_hb_file("welcome_user", WELCOME_USER_FILE, &json!({"login_id": login_id}))
+    load_hb_file("welcome_user", "html/welcome_user.hbs", &json!({"login_id": login_id}))
+}
+
+pub fn handle_request<F: 'static>(mut state: State, handle_state: F) -> Box<HandlerFuture>
+    where F:  Fn(&mut SessionData<UserData>, &HashMap<String, String>) -> String {
+    println!("handle_request");
+
+    let handler_future = Body::take_from(&mut state)
+        .concat2()
+        .then(move |full_body| match full_body {
+            Ok(valid_body) => {
+                let body_content = String::from_utf8(valid_body.to_vec()).unwrap();
+
+                let post_parameters = extract_post_params(&body_content);
+
+                let page = {
+                    let mut session_data = SessionData::<UserData>::borrow_mut_from(&mut state);
+                    handle_state(&mut session_data, &post_parameters)
+                };
+
+                let res = create_response(
+                    &state,
+                    StatusCode::Ok,
+                    Some((page.into_bytes(), mime::TEXT_HTML)));
+                future::ok((state, res))
+            }
+            Err(e) => return future::err((state, e.into_handler_error())),
+        });
+
+    Box::new(handler_future)
 }
 
 named!(parse_parameters<&str, Vec<(String, String)>>, do_parse!(

@@ -1,53 +1,28 @@
-// use std::collections::HashMap;
-
-use hyper::{StatusCode, Body};
-use mime;
-use futures::{Stream, Future, future};
-// use chrono::{Local};
-
-use gotham::state::{State, FromState};
-use gotham::http::response::create_response;
-use gotham::handler::{HandlerFuture, IntoHandlerError};
-use gotham::middleware::session::{SessionData};
+use gotham::state::{State};
+use gotham::handler::{HandlerFuture};
 
 use helper;
 
-pub fn handle_logout(mut state: State) -> Box<HandlerFuture> {
-    println!("handle_login");
+pub fn handle_logout(state: State) -> Box<HandlerFuture> {
+    println!("handle_logout");
 
-    let handler_future = Body::take_from(&mut state)
-        .concat2()
-        .then(|full_body| match full_body {
-            Ok(valid_body) => {
-                let body_content = String::from_utf8(valid_body.to_vec()).unwrap();
+    helper::handle_request(state, |session_data, _post_parameters| {
+        let mut user_data = helper::UserData::new();
 
-                // let post_parameters = helper::extract_post_params(&body_content);
+        user_data.login_id = session_data.login_id.clone();
+        user_data.logged_in = session_data.logged_in.clone();
+        user_data.last_login = session_data.last_login.clone();
 
-                let mut user_data = helper::UserData::new();
+        session_data.logged_in = false;
+        session_data.login_id = "".to_string();
+        session_data.last_login = 0;
 
-                {
-                    let session_data = SessionData::<helper::UserData>::borrow_mut_from(&mut state);
-                    user_data.login_id = session_data.login_id.clone();
-                    user_data.logged_in = session_data.logged_in.clone();
-                    user_data.last_login = session_data.last_login.clone();
+        println!("handle_out, user_data old: {}", user_data);
 
-                    session_data.logged_in = false;
-                    session_data.login_id = "".to_string();
-                    session_data.last_login = 0;
-                }
-
-                println!("handle_out, user_data old: {}", user_data);
-
-                let page = helper::get_logout_page(&user_data.login_id);
-
-                let res = create_response(
-                    &state,
-                    StatusCode::Ok,
-                    Some((page.into_bytes(), mime::TEXT_HTML)));
-                future::ok((state, res))
-            }
-            Err(e) => return future::err((state, e.into_handler_error())),
-        });
-
-    Box::new(handler_future)
+        if user_data.logged_in {
+            helper::get_logout_page(&user_data.login_id)
+        } else {
+            helper::get_login_page("")
+        }
+    })
 }
