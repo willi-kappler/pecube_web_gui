@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+// use std::collections::HashMap;
 
 use hyper::{StatusCode, Body};
 use mime;
 use futures::{Stream, Future, future};
-use chrono::{Local};
+// use chrono::{Local};
 
 use gotham::state::{State, FromState};
 use gotham::http::response::create_response;
@@ -21,20 +21,24 @@ pub fn handle_logout(mut state: State) -> Box<HandlerFuture> {
             Ok(valid_body) => {
                 let body_content = String::from_utf8(valid_body.to_vec()).unwrap();
 
-                let post_parameters = helper::extract_post_params(&body_content);
+                // let post_parameters = helper::extract_post_params(&body_content);
 
                 let mut user_data = helper::UserData::new();
 
                 {
-                    let session_data = SessionData::<helper::UserData>::borrow_from(&state);
+                    let session_data = SessionData::<helper::UserData>::borrow_mut_from(&mut state);
                     user_data.login_id = session_data.login_id.clone();
                     user_data.logged_in = session_data.logged_in.clone();
                     user_data.last_login = session_data.last_login.clone();
+
+                    session_data.logged_in = false;
+                    session_data.login_id = "".to_string();
+                    session_data.last_login = 0;
                 }
 
                 println!("handle_out, user_data old: {}", user_data);
 
-                let page = "TODO".to_string();
+                let page = helper::get_logout_page(&user_data.login_id);
 
                 let res = create_response(
                     &state,

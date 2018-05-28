@@ -4,14 +4,15 @@ use std::fs::File;
 use std::io::Read;
 use std::io;
 
-
-
 use nom::{IResult, alphanumeric};
 use handlebars::{Handlebars, RenderError};
+use serde_json;
+
 
 
 static SHOW_LOGIN_FILE : &str = "html/show_login.hbs";
 static WELCOME_USER_FILE : &str = "html/welcome_user.hbs";
+static LOGOUT_FILE : &str = "html/logout.hbs";
 
 
 #[derive(Clone, Deserialize, Serialize, StateData, Default, Debug)]
@@ -66,53 +67,32 @@ fn handlears_render_error(error: RenderError) -> String {
         </html>", error)
 }
 
-pub fn get_login_page(message: &str) -> String {
+fn load_hb_file(hb_name: &str, hb_file: &str, hb_json: &serde_json::Value) -> String {
     let mut hb = Handlebars::new();
 
-    match hb.register_template_file("show_login", SHOW_LOGIN_FILE) {
+    match hb.register_template_file(hb_name, hb_file) {
         Ok(_) => {
-            match hb.render("show_login", &json!({"message": message})) {
+            match hb.render(hb_name, hb_json) {
                 Ok(page) => page,
                 Err(e) => handlears_render_error(e)
             }
         }
         Err(_) => {
-            could_not_load_page(SHOW_LOGIN_FILE)
+            could_not_load_page(hb_file)
         }
     }
+}
 
-    // TODO: template engine, show message if not empty
-    /*
-    match load_page(SHOW_LOGIN_FILE) {
-        Ok(result) => result,
-        Err(_) => could_not_load_page(SHOW_LOGIN_FILE)
-    }
-    */
+pub fn get_login_page(message: &str) -> String {
+    load_hb_file("show_login", SHOW_LOGIN_FILE, &json!({"message": message}))
+}
+
+pub fn get_logout_page(user_id: &str) -> String {
+    load_hb_file("logout", LOGOUT_FILE, &json!({"login_id": user_id}))
 }
 
 pub fn get_welcome_user_page(login_id: &str) -> String {
-    let mut hb = Handlebars::new();
-
-    match hb.register_template_file("welcome_user", WELCOME_USER_FILE) {
-        Ok(_) => {
-            match hb.render("welcome_user", &json!({"login_id": login_id})) {
-                Ok(page) => page,
-                Err(e) => handlears_render_error(e)
-            }
-        }
-        Err(_) => {
-            could_not_load_page(WELCOME_USER_FILE)
-        }
-    }
-
-
-    // TODO: template engine, show login id of the user
-    /*
-    match load_page(WELCOME_USER_FILE) {
-        Ok(result) => result,
-        Err(_) => could_not_load_page(WELCOME_USER_FILE)
-    }
-    */
+    load_hb_file("welcome_user", WELCOME_USER_FILE, &json!({"login_id": login_id}))
 }
 
 named!(parse_parameters<&str, Vec<(String, String)>>, do_parse!(
@@ -160,10 +140,10 @@ pub fn extract_post_params(message_body: &str) -> HashMap<String, String> {
             }
         },
         IResult::Incomplete(_i) => {
-            // println!("extract_post_params: error incomplete: {:?}", i);
+            println!("extract_post_params: error incomplete: {:?}", i);
         },
         IResult::Error(_e) => {
-            // println!("extract_post_params: error: {}", e);
+            println!("extract_post_params: error: {}", e);
         }
     }
 

@@ -19,7 +19,6 @@ fn check_login(post_parameters: &HashMap<String, String>) -> bool {
             let password = &post_parameters["password"];
 
             if login == "test1" && password == "1234567890" { return true }
-
         }
     }
 
